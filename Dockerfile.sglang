@@ -1,0 +1,49 @@
+# Dockerfile for Qwen3-8B with SGLang
+# Special configuration for RTX 5090 (Compute Capability 12.0)
+# Using proven working image: sglang:blackwell-final-v2
+
+FROM sglang:blackwell-final-v2
+
+# Set environment variables for RTX 5090 compatibility
+ENV PYTORCH_CUDA_ALLOC_CONF="expandable_segments:True"
+ENV CUDA_LAUNCH_BLOCKING="1"
+ENV CUDA_VISIBLE_DEVICES="0"
+ENV TRANSFORMERS_CACHE="/root/.cache/huggingface"
+ENV HF_HUB_CACHE="/root/.cache/huggingface"
+
+# Model configuration
+ENV MODEL_PATH="Qwen/Qwen3-8B"
+ENV HOST="0.0.0.0"
+ENV PORT="8000"
+
+# RTX 5090 specific settings (Compute Capability 12.0)
+ENV MEM_FRACTION_STATIC="0.85"
+ENV ATTENTION_BACKEND="torch_native"
+ENV DISABLE_CUDA_GRAPH="1"
+ENV DISABLE_FLASHINFER="1"
+ENV DISABLE_RADIX_CACHE="1"
+
+# Install additional dependencies if needed
+RUN pip install --no-cache-dir \
+    torch \
+    transformers \
+    aiohttp
+
+# Create cache directory
+RUN mkdir -p /root/.cache/huggingface
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=300s --retries=3 \
+  CMD curl -f http://localhost:8000/health || exit 1
+
+# Default command with RTX 5090 optimizations
+CMD ["sh", "-c", "python -m sglang.launch_server \
+  --model-path ${MODEL_PATH} \
+  --host ${HOST} \
+  --port ${PORT} \
+  --mem-fraction-static ${MEM_FRACTION_STATIC} \
+  --trust-remote-code \
+  --disable-cuda-graph \
+  --disable-flashinfer \
+  --disable-radix-cache \
+  --attention-backend ${ATTENTION_BACKEND}"]

@@ -1,0 +1,6 @@
+test_type,num_users,speed_tok_s,throughput_tok_s,vram_initial_gb,vram_peak_gb,vram_increase_gb,total_time,successful_requests,failed_requests
+single_user,1,12.527736815352876,,31.19,31.2,0.00999999999999801,39.91143870353699,,
+concurrent_5_users,5,,371.6442684672061,31.2,31.2,0.0,2.6907451152801514,5,0
+concurrent_10_users,10,,731.9561200202364,31.2,31.2,0.0,2.7324042320251465,10,0
+concurrent_20_users,20,,1185.6111610105231,31.2,31.2,0.0,3.3737874031066895,20,0
+concurrent_50_users,50,,2832.3026295220284,31.2,31.2,0.0,3.530696153640747,50,0

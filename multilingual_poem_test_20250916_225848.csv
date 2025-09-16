@@ -1,0 +1,2 @@
+server,port,total_time,prompt_tokens,completion_tokens,total_tokens,tokens_per_second,text_length,has_chinese,has_korean,has_english
+SGLang,8000,43.12,281,2048,2329,47.50,4022,True,True,True

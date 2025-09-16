@@ -1,0 +1,100 @@
+version: '3.8'
+
+services:
+  # vLLM Service - Best Performance (3,770 tok/s with 100 users)
+  qwen3-8b-vllm:
+    image: vllm/vllm-openai:latest
+    container_name: qwen3-8b-vllm
+    runtime: nvidia
+    ports:
+      - "8000:8000"
+    environment:
+      - PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
+      - CUDA_VISIBLE_DEVICES=0
+    volumes:
+      - ~/.cache/huggingface:/root/.cache/huggingface
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    command: >
+      --model Qwen/Qwen3-8B
+      --host 0.0.0.0
+      --port 8000
+      --gpu-memory-utilization 0.95
+      --max-model-len 32768
+      --dtype auto
+      --trust-remote-code
+      --enable-prefix-caching
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 300s
+    networks:
+      - qwen-network
+
+  # SGLang Service - Alternative Option (Working with RTX 5090)
+  qwen3-8b-sglang:
+    image: sglang:blackwell-final-v2
+    container_name: qwen3-8b-sglang
+    runtime: nvidia
+    ports:
+      - "8001:8000"
+    environment:
+      - PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
+      - CUDA_LAUNCH_BLOCKING=1
+      - CUDA_VISIBLE_DEVICES=0
+    volumes:
+      - ~/.cache/huggingface:/root/.cache/huggingface
+    shm_size: '16gb'
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    command: >
+      python -m sglang.launch_server
+      --model-path Qwen/Qwen3-8B
+      --host 0.0.0.0
+      --port 8000
+      --mem-fraction-static 0.85
+      --trust-remote-code
+      --disable-cuda-graph
+      --disable-flashinfer
+      --disable-radix-cache
+      --attention-backend torch_native
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 300s
+    networks:
+      - qwen-network
+    profiles:
+      - sglang
+
+networks:
+  qwen-network:
+    driver: bridge
+
+# Usage:
+#
+# Run vLLM (Recommended - Best Performance):
+# docker-compose up qwen3-8b-vllm
+#
+# Run SGLang (Alternative):
+# docker-compose --profile sglang up qwen3-8b-sglang
+#
+# Run both services:
+# docker-compose --profile sglang up
+#
+# Stop all services:
+# docker-compose down

@@ -1,0 +1,2 @@
+server,port,total_time,prompt_tokens,completion_tokens,total_tokens,tokens_per_second,text_length,has_chinese,has_korean,has_english
+vLLM,8000,58.90,281,2048,2329,34.77,2521,True,False,False

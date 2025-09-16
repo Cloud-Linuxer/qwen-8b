@@ -1,0 +1,38 @@
+# Dockerfile for Qwen3-8B with vLLM
+# Optimized for NVIDIA GeForce RTX 5090 (32GB VRAM)
+
+FROM vllm/vllm-openai:latest
+
+# Set environment variables
+ENV PYTORCH_CUDA_ALLOC_CONF="expandable_segments:True"
+ENV CUDA_VISIBLE_DEVICES="0"
+ENV TRANSFORMERS_CACHE="/root/.cache/huggingface"
+ENV HF_HUB_CACHE="/root/.cache/huggingface"
+
+# Model configuration
+ENV MODEL_NAME="Qwen/Qwen3-8B"
+ENV HOST="0.0.0.0"
+ENV PORT="8000"
+
+# Performance optimizations for RTX 5090
+ENV GPU_MEMORY_UTILIZATION="0.95"
+ENV MAX_MODEL_LEN="32768"
+ENV DTYPE="auto"
+
+# Create cache directory
+RUN mkdir -p /root/.cache/huggingface
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=300s --retries=3 \
+  CMD curl -f http://localhost:8000/health || exit 1
+
+# Default command with optimized settings
+CMD ["sh", "-c", "python -m vllm.entrypoints.openai.api_server \
+  --model ${MODEL_NAME} \
+  --host ${HOST} \
+  --port ${PORT} \
+  --gpu-memory-utilization ${GPU_MEMORY_UTILIZATION} \
+  --max-model-len ${MAX_MODEL_LEN} \
+  --dtype ${DTYPE} \
+  --trust-remote-code \
+  --enable-prefix-caching"]
