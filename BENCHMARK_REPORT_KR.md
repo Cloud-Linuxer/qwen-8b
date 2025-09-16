@@ -335,6 +335,5 @@ curl http://localhost:8002/generate \
 
 ---
 
-*문서 생성일: 2025-01-16*
 *테스트 환경: NVIDIA RTX 5090 (Blackwell)*
 *모델: Qwen/Qwen3-8B*
